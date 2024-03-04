@@ -8,6 +8,7 @@ import (
 	"sync"
 	"log"
     "os"
+	"strings"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/mux"
@@ -195,14 +196,30 @@ router.HandleFunc("/api/leaderboard", func(w http.ResponseWriter, r *http.Reques
 
 
 	// CORS configuration
+	allowedOrigins := strings.Split(os.Getenv("ALLOWED_ORIGINS"), ",")
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{os.Getenv("ALLOWED_ORIGINS")},
+		AllowedOrigins: allowedOrigins,
 		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders: []string{"*"},
 		Debug:          true,
 	})
 
 	handler := c.Handler(router)
+
+	// Handle preflight requests explicitly
+router.Methods("OPTIONS").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Access-Control-Allow-Origin", "*") // Update with your allowed origins
+    w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+    w.Header().Set("Access-Control-Allow-Headers", "*")
+
+    // Respond to preflight request
+    w.WriteHeader(http.StatusOK)
+})
+
+	// Handle preflight requests explicitly
+	router.Methods("OPTIONS").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
 
 	fmt.Println("Server is running on :8080")
 	http.ListenAndServe(":8080", handler)
