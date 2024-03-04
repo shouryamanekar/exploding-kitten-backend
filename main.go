@@ -222,7 +222,8 @@ router.Methods("OPTIONS").HandlerFunc(func(w http.ResponseWriter, r *http.Reques
 	})
 
 	fmt.Println("Server is running on :8080")
-	http.ListenAndServe(":8080", handler)
+	http.ListenAndServe(":"+os.Getenv("PORT"), handler)
+
 }
 
 // Save data to Redis
